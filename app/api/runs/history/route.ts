@@ -1,0 +1,2 @@
+import { handle,json,requireUser,db,finalize } from '../../../../lib/server';
+export async function GET(request:Request){return handle(request,async()=>{await finalize();const u=await requireUser(request);const result=await db().prepare('SELECT id,day,week,status,score,started_at,end_reason FROM runs WHERE user_id=? ORDER BY started_at DESC LIMIT 100').bind(u.id).all();return json({runs:result.results});});}
