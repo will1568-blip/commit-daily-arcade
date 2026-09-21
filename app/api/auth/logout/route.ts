@@ -1,0 +1,2 @@
+import { handle,json,db,digest } from '../../../../lib/server';
+export async function POST(request:Request){return handle(request,async()=>{const token=request.headers.get('cookie')?.match(/(?:^|;\s*)slip_session=([a-f0-9]{64})/)?.[1];if(token)await db().prepare('DELETE FROM sessions WHERE token_hash=?').bind(await digest(token)).run();return json({ok:true},200,{'Set-Cookie':'slip_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0'});});}
