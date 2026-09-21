@@ -1,0 +1,6 @@
+export class ApiError extends Error {constructor(message:string,public status:number){super(message);}}
+export async function api(path:string,body?:unknown):Promise<any>{const r=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});let data:any;try{data=await r.json();}catch{throw new ApiError('Unable to connect. Please try again.',r.status);}if(!r.ok)throw new ApiError(data.error||'Unable to connect. Please try again.',r.status);return data;}
+export type Pending={id:string;trace:string;reason:string;userId:string};
+const KEY='slip-pending:';
+export function savePending(p:Pending){localStorage.setItem(KEY+p.id,JSON.stringify(p));}
+export async function retryPending(userId:string){if(!userId)return;try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(!key?.startsWith(KEY))continue;try{const p=JSON.parse(localStorage.getItem(key)||'null') as Pending;if(p?.userId!==userId)continue;const r=await api('runs/submit',p);if(r.status!=='started')localStorage.removeItem(key);}catch(e){if(e instanceof ApiError&&[409,410,404].includes(e.status))localStorage.removeItem(key);}}}catch{/* Storage may be disabled; server eligibility is still authoritative. */}}
