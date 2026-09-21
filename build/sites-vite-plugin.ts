@@ -180,7 +180,11 @@ export function sites({ mockAuth = true } = {}): Plugin {
       await rm(outputDirectory, { recursive: true, force: true });
       await mkdir(outputDirectory, { recursive: true });
 
-      await cp(hostingConfig, resolve(outputDirectory, "hosting.json"));
+      // Local Codex previews provide workspace-specific hosting metadata, but
+      // public clones and CI should still build without that private folder.
+      if (await exists(hostingConfig)) {
+        await cp(hostingConfig, resolve(outputDirectory, "hosting.json"));
+      }
       if (await exists(drizzleSource)) {
         await cp(drizzleSource, resolve(outputDirectory, "drizzle"), {
           recursive: true,
