@@ -1,0 +1,3 @@
+import { handle,json,user,ready,db,finalize } from '../../../lib/server';
+import { boundaries,GAME } from '../../../lib/engine';
+export async function GET(request:Request){return handle(request,async()=>{await finalize();const now=Date.now(),b=boundaries(now),u=await user(request);const [attempt,best]=u?await Promise.all([db().prepare('SELECT id,status,score,day,week FROM runs WHERE user_id=? AND game=? AND day=?').bind(u.id,GAME,b.day).first(),db().prepare("SELECT MAX(score) score FROM runs WHERE user_id=? AND game=? AND week=? AND status='verified'").bind(u.id,GAME,b.week).first<{score:number|null}>()]):[null,null];return json({serverNow:now,...b,smsReady:ready(),user:u,attempt,weeklyBest:best?.score??null});});}
